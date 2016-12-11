@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title>后台管理系统</title>
+
+	<link rel="stylesheet" href="css/jquery.treeview.css" />
+	<link rel="stylesheet" href="css/screen.css" />
+
+	<script src="js/jquery.js" type="text/javascript"></script>
+	<script src="js/jquery.cookie.js" type="text/javascript"></script>
+	<script src="js/jquery.treeview.js" type="text/javascript"></script>
+
+</head>
+<body>
+	<div class="header">
+		<h1 id="banner">后台管理系统</h1>
+	</div>
+	
+	<div class="page clearfix">
+		<div class="sidebar">
+			<h3>栏目列表</h3>
+			<ul id="example" class="filetree">
+				<!-- 栏目列表 -->
+			</ul>
+		</div>
+		
+		<div class="main" id="main">
+			<div class="link-option">
+				<a href="javascript:;" class="b" id="nav">文章列表</a>
+				<a href="javascript:;" >文章添加</a>
+			</div>
+			<div class="list-add">
+				<div class="list" id="0">
+					<!-- 搜索 -->
+					<div class="form">
+						<p>
+							<label>栏目：</label>
+							<select class="select selectOption">
+								<!-- 栏目选项 -->
+							</select>
+						</p>
+						<p>
+							<label>标题：</label>
+							<input type="text" name="title" id="title" />
+							<input type="button" name="" value="查询" class="btn" id="search" />
+						</p>
+					</div>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>栏目</th>
+								<th>标题</th>
+								<th>更新时间</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody id="dataTable">
+							<!-- 数据列表 -->
+						</tbody>
+					</table>
+					<!-- 分页 -->
+					<div class="databtn" style="margin-top: 22px;">
+						<a href="javascript:;" pageNum="pre" class="pre">上一页</a><span id="pageIt"></span><a href="javascript:;" pageNum="next" class="next">下一页</a>
+					</div>
+				</div>
+				<div class="add none" id="1">
+					<form id="addContent">
+						<p>
+							<label>文章栏目：</label>
+							<select class="title selectOption" name="name">
+								<!-- 栏目选项 -->
+							</select>
+						</p>
+						<p>
+							<label>文章标题：</label>
+							<input type="text" name="title" class="title inputcontent" />
+						</p>
+						<p>
+							<label>文章内容：</label>
+							<textarea name="content" class="content inputcontent"></textarea>
+						</p>
+						<p>
+							<input type="button" value="提交" class="btn submit" id="submit" />
+						</p>
+					</form>	
+				</div>
+			</div>
+		</div>
+
+		<div class="view-change add none" id="change">
+			<div class="site">内容修改</div>
+			<form id="changeForm">
+				<p>
+					<label>文章栏目：</label>
+					<select class="title selectOption" name="name" id="changeName">
+						<!-- 栏目选项 -->
+					</select>
+				</p>
+				<p>
+					<label>文章标题：</label>
+					<input type="text" name="title" class="title inputcontent" id="changeTitle" />
+				</p>
+				<p>
+					<label>文章内容：</label>
+					<textarea name="content" class="content inputcontent" id="changeContent"></textarea>
+				</p>
+				<p>
+					<input type="button" value="提交" class="btn submit" id="submitChange" />
+				</p>
+			</form>	
+		</div>
+
+		<div class="view-change add none" id="view">
+			<div class="site">查看详情</div>
+			<div>
+				<p>
+					<label>文章栏目：</label>
+					<span class="viewName"></span>
+				</p>
+				<p>
+					<label>文章标题：</label>
+					<span class="viewTitle"></span>
+				</p>
+				<p>
+					<label>文章内容：</label>
+					<span class="viewContent"></span>
+				</p>
+			</div>	
+		</div>
+
+	</div>
+
+	<div class="footer">
+		页面底部
+	</div>
+
+<script type="text/javascript" src="js/paging.js"></script>
+<script type="text/javascript" src="js/change-view.js"></script>
+<script type="text/javascript" src="js/search.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	// 栏目列表
+	$.ajax({
+		type: "get",
+		url: "sidebar.json",
+		dataType:'json',
+		success: function(data){
+			sidebarSuccess(data);
+		}
+	});
+	function sidebarSuccess(data){
+	
+		var option = '';//左侧树
+		var optionList = '';//下拉列表
+
+		$.each(data,function(i,o){
+				
+			if (o.children == undefined) {
+				option +='<li><a href="javascript:;"><span class="file">'+o.name+'</span></a></li>';
+				optionList += '<option>'+o.name+'</option>';
+			}else{
+				var myChild = '';
+				$.each(o.children,function(m,n){
+					myChild += '<li><a href="javascript:;"><span class="file">'+n.name+'</span></a></li>';
+					optionList += '<option>'+n.name+'</option>';
+				});
+				option +='<li><span class="folder">'+o.name+'</span><ul>'+ myChild +'</ul></li>';
+			};
+
+		});
+
+		$(option).appendTo("#example");
+		$(optionList).appendTo(".selectOption");
+
+		$("#example").treeview({
+			collapsed: false
+		});
+
+		search();// 查询显示数据
+	};
+
+
+	// frame
+	var indexOption = '';
+			
+	$(".link-option a").click(function(){
+		$(this).addClass("b").siblings().removeClass("b");
+		indexOption = $(this).index();
+		frame();
+	});
+
+	var frame = function(){
+		$(".list-add>div").each(function(){
+			var indexList = $(this).attr('id');
+			if (indexList == indexOption) {
+				$(this).removeClass("none").siblings().addClass("none");
+			}
+		});
+	};
+
+
+	// 文章添加提交数据
+	$("#submit").click(function(){
+		$.ajax({
+			type: "get",
+			url: "datatable.json",
+			data: $('#addContent').serialize(),
+			success: function(){
+				alert("已提交");
+				$(".inputcontent").attr("value","");
+			}
+		});
+	});
+
+
+	// 修改提交
+	$("#submitChange").click(function(){
+		$.ajax({
+			type: "get",
+			url: "datatable.json",
+			data: $('#changeForm').serialize(),
+			success: function(){
+				alert("已提交");
+			}
+		});
+	});
+
+});
+</script>
+</body></html>
